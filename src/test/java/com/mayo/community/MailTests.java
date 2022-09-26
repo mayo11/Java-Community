@@ -3,10 +3,12 @@ package com.mayo.community;
 import com.mayo.community.dao.LoginTicketMapper;
 import com.mayo.community.entity.LoginTicket;
 import com.mayo.community.util.MailClient;
+import com.mayo.community.util.RedisKeyUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -31,8 +33,11 @@ public class MailTests {
     @Autowired
     private TemplateEngine templateEngine;
 
+//    @Autowired
+//    private LoginTicketMapper loginTicketMapper;
+
     @Autowired
-    private LoginTicketMapper loginTicketMapper;
+    private RedisTemplate redisTemplate;
 
     @Test
     public void testTextMail(){
@@ -58,16 +63,23 @@ public class MailTests {
         loginTicket.setStatus(0);
         loginTicket.setExpired(new Date(System.currentTimeMillis() + 1000 * 60 *10));
 
-        loginTicketMapper.insertLoginTicket(loginTicket);
+//        loginTicketMapper.insertLoginTicket(loginTicket);
+        String redisKey = RedisKeyUtil.getTicketKey(loginTicket.getTicket());
+        redisTemplate.opsForValue().set(redisKey, loginTicket);
     }
 
     @Test
     public void testSelectLoginTicket(){
-        LoginTicket loginTicket = loginTicketMapper.selectByTicket("avc");
+        //LoginTicket loginTicket = loginTicketMapper.selectByTicket("avc");
+        String redisKey = RedisKeyUtil.getTicketKey("avc");
+        LoginTicket loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
         System.out.println(loginTicket);
 
-        loginTicketMapper.updateStatus("avc", 1);
-        loginTicket = loginTicketMapper.selectByTicket("avc");
+        //loginTicketMapper.updateStatus("avc", 1);
+        loginTicket.setStatus(1);
+        redisTemplate.opsForValue().set(redisKey, loginTicket);
+        //loginTicket = loginTicketMapper.selectByTicket("avc");
+        loginTicket = (LoginTicket) redisTemplate.opsForValue().get(redisKey);
         System.out.println(loginTicket);
     }
 }
