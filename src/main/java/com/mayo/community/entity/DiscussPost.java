@@ -1,18 +1,46 @@
 package com.mayo.community.entity;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
 import java.security.PrivateKey;
 import java.util.Date;
 
+//索引库名为discussPost，类型为_doc，分片为6，每片备份3片
+@Document(indexName = "discusspost", type = "_doc",shards = 6,replicas = 3)
 public class DiscussPost {
 
+    // 将参数与elasticsearch一一对应
+    @Id
     private int id;
+
+    @Field(type = FieldType.Integer)
     private int userId;
+
+    // 分词器， 搜索解析
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
     private String title;
+
+    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
     private String content;
+
+    @Field(type = FieldType.Integer)
     private int type;
+
+    @Field(type = FieldType.Integer)
     private int status;
+
+    // Elasticsearch存储时间格式为UTC的long型时间戳
+    @Field(type = FieldType.Date, format = DateFormat.basic_date)
     private Date createTime;
+
+    @Field(type = FieldType.Integer)
     private int commentCount;
+
+    @Field(type = FieldType.Double)
     private double score;
 
     public int getId() {
